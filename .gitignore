@@ -1,0 +1,6 @@
+# Dependencies and packages
+node_modules/
+build/
+
+# Secret
+.env
