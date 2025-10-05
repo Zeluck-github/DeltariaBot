@@ -1,6 +1,6 @@
 import { EmbedBuilder, type GuildMember } from "discord.js"
-import type CustomClient from "../../structures/CustomClient.js"
-import clientConfig from "../../structures/config.js"
+import type CustomClient from "../../../structures/CustomClient.js"
+import clientConfig from "../../../structures/config.js"
 
 export default {
     name: "guildMemberAdd",
@@ -13,18 +13,6 @@ export default {
             })
             .setDescription(`${member.toString()} Vient de rejoindre`)
             .setColor(clientConfig.COLOR)
-            .addFields(
-                {
-                    name: "Nom :",
-                    value: `${member.user.tag} | (${member.user.id}) | <@${member.user.id}>`,
-                },
-                {
-                    name: "Rejoint le :",
-                    value: member.joinedAt
-                        ? `${member.joinedAt.toLocaleDateString("fr-FR")} à ${member.joinedAt.toLocaleTimeString("fr-FR")}`
-                        : "Inconnu",
-                },
-            )
         const logChannel = member.guild.channels.cache.get(clientConfig.LOG_CHANNEL_ID)
         if (logChannel?.isTextBased()) {
             await logChannel.send({
