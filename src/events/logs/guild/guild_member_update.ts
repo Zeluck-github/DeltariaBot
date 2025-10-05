@@ -84,10 +84,6 @@ export default ({
                             inline: false,
                         },
                     )
-                    .setFooter({
-                        text: `${newMember.guild.name ?? "Reverant"} Logs • Mise à jour de membre`,
-                        iconURL: newMember.guild.iconURL() ?? undefined,
-                    })
 
                 const logChannel = newMember.guild.channels.cache.get(clientConfig.LOG_CHANNEL_ID)
                 if (logChannel?.isTextBased()) {
