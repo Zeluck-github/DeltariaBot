@@ -60,6 +60,12 @@ export default {
                 } catch (error) {
                     client.logger(LogLevel.ERROR, "TicketModal", "Error while creating ticket", error)
                 }
+            } else if (interaction.customId === "validate_team_modal") {
+                try {
+                    await ticketManager.validateTeam(interaction)
+                } catch (error) {
+                    client.logger(LogLevel.ERROR, "ValidateTeamModal", "Error while validating team", error)
+                }
             }
         } else if (interaction.isUserSelectMenu()) {
             const ticketManager = new TicketManager(client)

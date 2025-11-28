@@ -101,7 +101,7 @@ export class TicketManager {
         const teamMembers = interaction.fields.getTextInputValue("inscription_members")
 
         const ticketChannel = await guild.channels.create({
-            name: `🎫-${interaction.user.username}`,
+            name: `🎫-${teamName}`,
             type: ChannelType.GuildText,
             topic: interaction.user.id,
             parent: categoryTicket,
@@ -299,5 +299,97 @@ export class TicketManager {
         }
 
         await interaction.followUp({ content: "Les utilisateurs ont été ajoutés ou retirés du ticket." }).catch(console.error)
+    }
+
+    public async validateTeam(interaction: ModalSubmitInteraction) {
+        await interaction.deferReply({ ephemeral: false })
+
+        const guild = this.client.guilds.cache.get(config.DISCORD_GUILD_ID)
+        if(!guild) return console.error("Guild not found.")
+
+        const teamName = interaction.fields.getTextInputValue("team_name")
+        const teamTag = interaction.fields.getTextInputValue("team_tag")
+        const teamColor = interaction.fields.getTextInputValue("team_color")
+
+        const colorRegex = /^#[0-9A-F]{6}$/i
+        if (!colorRegex.test(teamColor)) {
+            return interaction.followUp({ 
+                content: "❌ Le format de couleur est invalide. Utilisez le format hexadécimal (ex: #FF0000)", 
+                ephemeral: true,
+            })
+        }
+
+        const roleName = teamTag ? teamTag : teamName
+        const role = await guild.roles.create({
+            name: roleName,
+            color: teamColor as `#${string}`,
+            mentionable: true,
+        }).catch(console.error)
+
+        if (!role) {
+            return interaction.followUp({ 
+                content: "❌ Erreur lors de la création du rôle.", 
+                ephemeral: true,
+            })
+        }
+
+        const categoryName = teamTag ? `${teamTag} - ${teamName}` : teamName
+        const category = await guild.channels.create({
+            name: categoryName,
+            type: ChannelType.GuildCategory,
+            permissionOverwrites: [
+                {
+                    id: guild.id,
+                    deny: [PermissionsBitField.Flags.ViewChannel],
+                },
+                {
+                    id: role.id,
+                    allow: [
+                        PermissionsBitField.Flags.ViewChannel,
+                        PermissionsBitField.Flags.SendMessages,
+                        PermissionsBitField.Flags.Connect,
+                        PermissionsBitField.Flags.Speak,
+                    ],
+                },
+            ],
+        }).catch(console.error)
+
+        if (!category) {
+            return interaction.followUp({ 
+                content: "❌ Erreur lors de la création de la catégorie.", 
+                ephemeral: true,
+            })
+        }
+
+        const textChannel = await guild.channels.create({
+            name: teamTag ? `💬-${teamTag.toLowerCase()}` : `💬-${teamName.toLowerCase()}`,
+            type: ChannelType.GuildText,
+            parent: category,
+        }).catch(console.error)
+
+        const voiceChannel = await guild.channels.create({
+            name: teamTag ? `🔊 ${teamTag}` : `🔊 ${teamName}`,
+            type: ChannelType.GuildVoice,
+            parent: category,
+        }).catch(console.error)
+
+        const embed = new EmbedBuilder()
+            .setTitle("✅ Équipe Validée")
+            .setDescription([
+                `L'équipe a été validée par <@${interaction.user.id}>`,
+                "",
+                `**Nom de l'équipe :** \`${teamName}\``,
+                teamTag ? `**TAG :** \`${teamTag}\`` : "",
+                `**Couleur :** \`${teamColor}\``,
+                `**Rôle créé :** ${role}`,
+                "",
+                "**Salons créés :**",
+                textChannel ? `📝 Salon textuel : ${textChannel}` : "",
+                voiceChannel ? `🔊 Salon vocal : ${voiceChannel}` : "",
+            ].filter(line => line !== "").join("\n"))
+            .setColor(teamColor as `#${string}`)
+            .setTimestamp()
+
+        await interaction.followUp({ embeds: [embed] })
     }
 }
