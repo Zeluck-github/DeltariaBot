@@ -29,18 +29,17 @@ export class TicketManager {
         if(!channel) return console.error("Ticket channel not found.")
 
         const embed = new EmbedBuilder()
-            .setTitle("🎫 Créer un Ticket")
+            .setTitle("Inscription Équipe")
             .setDescription([
-                "Veuillez cliquer sur le bouton ci-dessous pour créer un ticket,",
-                "et contactez le staff pour obtenir de l'aide.",
+                "Si vous souhaitez inscrire votre équipe pour un événement, cliquez sur le bouton ci-dessous pour créer un ticket d'inscription.",
             ].join("\n"))
-            .setColor(clientConfig.COLOR)
+            .setColor("#84110F")
 
         const row = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId("ticket_open")
-                    .setLabel("Créer un Ticket")
+                    .setLabel("Inscrire mon équipe")
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji("🎫"),
             )
@@ -96,8 +95,10 @@ export class TicketManager {
 
         if(channelExist) return interaction.followUp({ content: "Vous avez déjà un ticket ouvert." })
 
-        const ticketSubject = interaction.fields.getTextInputValue("ticket_subject")
-        const ticketDescription = interaction.fields.getTextInputValue("ticket_description")
+        const teamName = interaction.fields.getTextInputValue("inscription_equipe")
+        const teamTag = interaction.fields.getTextInputValue("inscription_tag")
+        const teamColor = interaction.fields.getTextInputValue("inscription_couleur")
+        const teamMembers = interaction.fields.getTextInputValue("inscription_members")
 
         const ticketChannel = await guild.channels.create({
             name: `🎫-${interaction.user.username}`,
@@ -118,22 +119,24 @@ export class TicketManager {
         if(!ticketChannel) return console.error("Ticket channel not created.")
 
         const embed = new EmbedBuilder()
-            .setTitle("🎫 Ticket ouvert")
+            .setTitle("🎫 Inscription Équipe")
             .setDescription([
-                `Ticket ouvert par <@${interaction.user.id}> (${interaction.user.id})`,
-                `**Sujet :** \`${ticketSubject}\``,
-                `**Description :**\n\`\`\`\n${ticketDescription}\n\`\`\``,
+                `Demande d'inscription par <@${interaction.user.id}> (${interaction.user.id})`,
+                `**Nom de l'équipe :** \`${teamName}\``,
+                teamTag ? `**TAG :** \`${teamTag}\`` : "",
+                `**Couleur :** \`${teamColor}\``,
+                `**Membres :**\n\`\`\`\n${teamMembers}\n\`\`\``,
                 "",
                 "*Un membre du staff vous répondra dès que possible.*",
-            ].join("\n"))
-            .setColor(clientConfig.COLOR)
+            ].filter(line => line !== "").join("\n"))
+            .setColor("#84110F")
             .setTimestamp()
 
         const selectRow = new ActionRowBuilder<UserSelectMenuBuilder>()
             .addComponents(
                 new UserSelectMenuBuilder()
                     .setCustomId("ticket_user")
-                    .setPlaceholder("Sélectionner un ou plusieurs utilisateurs")
+                    .setPlaceholder("Ajouter les membres de l'équipe au ticket")
                     .setMinValues(0)
                     .setMaxValues(5),
             )
@@ -162,14 +165,14 @@ export class TicketManager {
     public async openTicketTrigger(interaction: ButtonInteraction) {
         const modal = new ModalBuilder()
             .setCustomId("ticket_modal")
-            .setTitle("Sujet du ticket")
+            .setTitle("Inscription équipe")
             .addComponents(
                 new ActionRowBuilder<TextInputBuilder>()
                     .addComponents(
                         new TextInputBuilder()
-                            .setCustomId("ticket_subject")
-                            .setLabel("Sujet")
-                            .setPlaceholder("Sujet du ticket")
+                            .setCustomId("inscription_equipe")
+                            .setLabel("Nom")
+                            .setPlaceholder("Nom de votre équipe")
                             .setStyle(TextInputStyle.Short)
                             .setRequired(true)
                             .setMaxLength(100),
@@ -177,13 +180,33 @@ export class TicketManager {
                 new ActionRowBuilder<TextInputBuilder>()
                     .addComponents(
                         new TextInputBuilder()
-                            .setCustomId("ticket_description")
-                            .setLabel("Description")
-                            .setPlaceholder("Description du ticket")
-                            .setStyle(TextInputStyle.Paragraph)
+                            .setCustomId("inscription_tag")
+                            .setLabel("TAG")
+                            .setPlaceholder("TAG de votre équipe")
+                            .setStyle(TextInputStyle.Short)
                             .setRequired(false)
                             .setMaxLength(1000),
                     ),
+                new ActionRowBuilder<TextInputBuilder>()
+                    .addComponents(
+                        new TextInputBuilder()
+                            .setCustomId("inscription_couleur")
+                            .setLabel("Couleur")
+                            .setPlaceholder("Couleur de votre équipe (ex: #FF0000)")
+                            .setStyle(TextInputStyle.Short)
+                            .setRequired(true)
+                            .setMaxLength(2000),
+                    ),
+                new ActionRowBuilder<TextInputBuilder>()
+                    .addComponents(
+                        new TextInputBuilder()
+                            .setCustomId("inscription_members")
+                            .setLabel("Pseudo Minecraft des membres de l'équipe")
+                            .setPlaceholder("Zeluck_ , tonykun7 , Riveur , ...")
+                            .setStyle(TextInputStyle.Paragraph)
+                            .setRequired(true)
+                            .setMaxLength(4000),
+                    ), 
             )
 
         return await interaction.showModal(modal)
